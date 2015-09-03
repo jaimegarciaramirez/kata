@@ -1,38 +1,58 @@
 package me.garcia.bowling;
 
 public class Scorer {
-
-	public static int score(Frame[] frames) {
+	private static final int NUMBER_OF_FRAMES = 10;
+	private Frame[] frames;
+	private int currentFrameIndex;
+	
+	public Scorer(Frame[] frames) {
+		if (frames.length < NUMBER_OF_FRAMES) {
+			throw new IllegalArgumentException("Expected to have " + 
+					NUMBER_OF_FRAMES + " frames");
+		}
+		this.frames = frames;
+	}
+	
+	public int score() {
 		int totalScore = 0;
-		for (int index = 0; index < frames.length; index++) {
-			Frame frame = frames[index];
-			totalScore += frame.getRoll1() + frame.getRoll2();
-			if (frame.isSpare()) {
-				if (isLastFrame(index, frames)) {
-					totalScore += frame.getRoll3();
-				} else {
-					totalScore += frames[index + 1].getRoll1();
-				}
-			}
-			if (frame.isStrike()) {
-				if (isLastFrame(index, frames)) {
-					totalScore += frame.getRoll3();
-				} else if (frames[index + 1].isStrike()) {
-					totalScore += frames[index + 1].getRoll1();
-					if (isLastFrame(index + 1, frames)) {
-						totalScore += frames[index + 1].getRoll2();
+		currentFrameIndex = 0;
+		for (Frame currentFrame : frames) {
+			int frameScore = currentFrame.getRoll1() + currentFrame.getRoll2();
+			if (isLastFrame()) {
+				frameScore += currentFrame.getRoll3();
+			} else if (currentFrame.isSpare()) {
+				frameScore += nextFrame().getRoll1();
+			} else if (currentFrame.isStrike()) {
+				if (nextFrame().isStrike()) {
+					frameScore += nextFrame().getRoll1();
+					if (isNextFrameTheLastFrame()) {
+						frameScore += nextFrame().getRoll2();
 					} else {
-						totalScore += frames[index + 2].getRoll1();
+						frameScore += nextNextFrame().getRoll1();
 					}
 				} else {
-					totalScore += frames[index + 1].getRoll1() + frames[index + 1].getRoll2();
+					frameScore += nextFrame().getRoll1() + nextFrame().getRoll2();
 				}
 			}
+			currentFrameIndex++;
+			totalScore += frameScore;
 		}
 		return totalScore;
 	}
 
-	private static boolean isLastFrame(int index, Frame[] frames) {
-		return index == frames.length - 1;
+	private boolean isLastFrame() {
+		return (currentFrameIndex + 1) == NUMBER_OF_FRAMES;
+	}
+	
+	private boolean isNextFrameTheLastFrame() {
+		return (currentFrameIndex + 2) == NUMBER_OF_FRAMES;
+	}
+	
+	private Frame nextFrame() {
+		return frames[currentFrameIndex + 1];
+	}
+	
+	private Frame nextNextFrame() {
+		return frames[currentFrameIndex + 2];
 	}
 }
